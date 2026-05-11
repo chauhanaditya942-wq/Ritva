@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useCycle } from '../hooks/useCycle'
 import ChatAssistant from '../components/AI/ChatAssistant'
+import CycleChart from '../components/Predictions/CycleChart'
 
 export default function Insights({ userId, t }) {
   const { periodLogs, getAvgCycleLength, getDaysUntilNextPeriod, getOvulationDate } = useCycle(userId)
   const [recentLogs, setRecentLogs] = useState([])
+  const [healthLogs, setHealthLogs] = useState([])
   const [showChat, setShowChat] = useState(false)
   const [editingLog, setEditingLog] = useState(null)
   const [newEndDate, setNewEndDate] = useState('')
@@ -14,6 +16,7 @@ export default function Insights({ userId, t }) {
 
   useEffect(() => {
     fetchRecentLogs()
+    fetchHealthLogs()
   }, [])
 
   const fetchRecentLogs = async () => {
@@ -24,6 +27,16 @@ export default function Insights({ userId, t }) {
       .order('date', { ascending: false })
       .limit(7)
     if (data) setRecentLogs(data)
+  }
+
+  const fetchHealthLogs = async () => {
+    const { data } = await supabase
+      .from('health_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(7)
+    if (data) setHealthLogs(data)
   }
 
   const handleUpdateEndDate = async () => {
@@ -72,10 +85,17 @@ export default function Insights({ userId, t }) {
         </div>
       </div>
 
+      {/* ── Cycle Charts ── */}
+      <CycleChart
+        periodLogs={periodLogs}
+        healthLogs={healthLogs}
+        isHindi={isHindi}
+      />
+
       {/* AI Chat Toggle */}
       <button
         onClick={() => setShowChat(!showChat)}
-        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-2xl font-medium mb-4 shadow-sm flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-2xl font-medium mt-4 mb-4 shadow-sm flex items-center justify-center gap-2"
       >
         <span>🤖</span>
         {showChat

@@ -14,9 +14,10 @@ export default function Home({ userId, t }) {
     getDaysUntilNextPeriod,
     getAvgCycleLength,
     getNextPeriodDate,
-    logPeriod
+    logPeriod,
+    getFertileWindowDates,
+    getLutealDates,
   } = useCycle(userId)
-
   const [showLogModal, setShowLogModal] = useState(false)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -83,11 +84,14 @@ export default function Home({ userId, t }) {
         {t.logPeriod}
       </button>
 
-      {/* Calendar */}
+      {/* ✅ FIX: fertileWindowDates aur lutealDates ab pass ho rahe hain */}
       <PeriodCalendar
         periodDates={getPeriodDates()}
         predictedDates={getPredictedDates()}
         ovulationDate={getOvulationDate()}
+        fertileWindowDates={getFertileWindowDates()}
+        lutealDates={getLutealDates()}
+        isHindi={isHindi}
       />
 
       {/* Quick Stats */}
