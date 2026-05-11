@@ -5,6 +5,7 @@ import Auth from './pages/Auth'
 import Home from './pages/Home'
 import Log from './pages/Log'
 import Insights from './pages/Insights'
+import Profile from './pages/Profile'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -44,7 +45,6 @@ function App() {
             <p className="text-sm text-rose-100">{t.appTagline}</p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Language Toggle */}
             <button
               onClick={toggleLang}
               className="text-xs bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 font-medium"
@@ -65,6 +65,7 @@ function App() {
         {activePage === 'home' && <Home userId={session.user.id} t={t} />}
         {activePage === 'log' && <Log userId={session.user.id} t={t} />}
         {activePage === 'insights' && <Insights userId={session.user.id} t={t} />}
+        {activePage === 'profile' && <Profile userId={session.user.id} t={t} />}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-rose-100 flex justify-around py-3 shadow-lg">
@@ -88,6 +89,13 @@ function App() {
         >
           <span className="text-xl">📊</span>
           {t.insights}
+        </button>
+        <button
+          onClick={() => setActivePage('profile')}
+          className={`flex flex-col items-center text-xs gap-1 ${activePage === 'profile' ? 'text-rose-500' : 'text-gray-400'}`}
+        >
+          <span className="text-xl">👤</span>
+          {t.profile || 'Profile'}
         </button>
       </nav>
     </div>

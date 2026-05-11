@@ -7,6 +7,8 @@ export default function Insights({ userId, t }) {
   const { periodLogs, getAvgCycleLength, getDaysUntilNextPeriod, getOvulationDate } = useCycle(userId)
   const [recentLogs, setRecentLogs] = useState([])
   const [showChat, setShowChat] = useState(false)
+  const [editingLog, setEditingLog] = useState(null)
+  const [newEndDate, setNewEndDate] = useState('')
 
   const isHindi = t.hello.includes('नमस्ते')
 
@@ -22,6 +24,19 @@ export default function Insights({ userId, t }) {
       .order('date', { ascending: false })
       .limit(7)
     if (data) setRecentLogs(data)
+  }
+
+  const handleUpdateEndDate = async () => {
+    if (!newEndDate) return
+    const { error } = await supabase
+      .from('period_logs')
+      .update({ end_date: newEndDate })
+      .eq('id', editingLog.id)
+    if (!error) {
+      setEditingLog(null)
+      setNewEndDate('')
+      window.location.reload()
+    }
   }
 
   const ovulationDate = getOvulationDate()
@@ -88,19 +103,29 @@ export default function Insights({ userId, t }) {
         ) : (
           <div className="space-y-2">
             {periodLogs.slice(0, 5).map(log => (
-              <div key={log.id} className="flex justify-between items-center py-2 border-b border-rose-50 last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">
-                    {new Date(log.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    to {new Date(log.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                  </p>
-                </div>
-                <div className="bg-rose-50 px-3 py-1 rounded-full">
-                  <p className="text-xs text-rose-500 font-medium">
-                    {Math.ceil((new Date(log.end_date) - new Date(log.start_date)) / (1000 * 60 * 60 * 24) + 1)} {t.days}
-                  </p>
+              <div key={log.id} className="py-2 border-b border-rose-50 last:border-0">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">
+                      {new Date(log.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      to {new Date(log.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-rose-50 px-3 py-1 rounded-full">
+                      <p className="text-xs text-rose-500 font-medium">
+                        {Math.ceil((new Date(log.end_date) - new Date(log.start_date)) / (1000 * 60 * 60 * 24) + 1)} {t.days}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setEditingLog(log)}
+                      className="text-xs bg-rose-100 text-rose-500 px-2 py-1 rounded-full hover:bg-rose-200"
+                    >
+                      ✏️
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -133,6 +158,45 @@ export default function Insights({ userId, t }) {
           </div>
         )}
       </div>
+
+      {/* Edit End Date Modal */}
+      {editingLog && (
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
+          <div className="bg-white w-full max-w-md rounded-t-3xl p-6">
+            <h3 className="text-lg font-bold text-gray-700 mb-4">
+              {isHindi ? 'अंत तारीख अपडेट करें' : 'Update End Date'} 🌸
+            </h3>
+            <p className="text-xs text-gray-400 mb-4">
+              {isHindi ? 'शुरुआत:' : 'Started:'} {new Date(editingLog.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}
+            </p>
+            <div className="mb-6">
+              <label className="text-xs text-gray-500 font-medium">
+                {isHindi ? 'अंत की तारीख' : 'End Date'}
+              </label>
+              <input
+                type="date"
+                defaultValue={editingLog.end_date}
+                onChange={e => setNewEndDate(e.target.value)}
+                className="w-full mt-1 px-4 py-3 rounded-xl border border-rose-100 focus:outline-none focus:border-rose-400 text-sm"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setEditingLog(null); setNewEndDate('') }}
+                className="flex-1 py-3 rounded-xl border border-rose-100 text-gray-400 text-sm"
+              >
+                {isHindi ? 'रद्द करें' : 'Cancel'}
+              </button>
+              <button
+                onClick={handleUpdateEndDate}
+                className="flex-1 py-3 rounded-xl bg-rose-500 text-white text-sm font-medium"
+              >
+                {isHindi ? 'अपडेट करें' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )
