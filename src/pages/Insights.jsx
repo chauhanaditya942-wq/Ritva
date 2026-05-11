@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useCycle } from '../hooks/useCycle'
+import ChatAssistant from '../components/AI/ChatAssistant'
 
 export default function Insights({ userId, t }) {
   const { periodLogs, getAvgCycleLength, getDaysUntilNextPeriod, getOvulationDate } = useCycle(userId)
   const [recentLogs, setRecentLogs] = useState([])
+  const [showChat, setShowChat] = useState(false)
+
+  const isHindi = t.hello.includes('नमस्ते')
 
   useEffect(() => {
     fetchRecentLogs()
@@ -52,6 +56,29 @@ export default function Insights({ userId, t }) {
           </div>
         </div>
       </div>
+
+      {/* AI Chat Toggle */}
+      <button
+        onClick={() => setShowChat(!showChat)}
+        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-2xl font-medium mb-4 shadow-sm flex items-center justify-center gap-2"
+      >
+        <span>🤖</span>
+        {showChat
+          ? (isHindi ? 'AI Chat बंद करें' : 'Close AI Chat')
+          : (isHindi ? 'RITVA AI से पूछें' : 'Ask RITVA AI')}
+      </button>
+
+      {/* AI Chat */}
+      {showChat && (
+        <div className="mb-4">
+          <ChatAssistant
+            userId={userId}
+            periodLogs={periodLogs}
+            recentSymptoms={recentLogs}
+            isHindi={isHindi}
+          />
+        </div>
+      )}
 
       {/* Period History */}
       <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-rose-50">
@@ -106,6 +133,7 @@ export default function Insights({ userId, t }) {
           </div>
         )}
       </div>
+
     </div>
   )
 }
