@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import HealthTracker from '../components/Calendar/HealthTracker'
-
+import WaterTracker from '../components/Water/WaterTracker'
 export default function Profile({ userId, t }) {
   const [profile, setProfile] = useState({
     name: '',
@@ -192,7 +192,8 @@ export default function Profile({ userId, t }) {
       >
         {saving ? '...' : (isHindi ? 'सेव करें' : 'Save Profile')}
       </button>
-
+{/* Water Tracker */}
+<WaterTracker userId={userId} isHindi={isHindi} />
       {/* Health Tracker */}
       <HealthTracker userId={userId} isHindi={isHindi} />
 

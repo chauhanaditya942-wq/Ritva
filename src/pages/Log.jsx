@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import SymptomTips from '../components/Symptoms/SymptomTips'
+import CustomSymptoms from '../components/Symptoms/CustomSymptoms'
+import MoodJournal from '../components/AI/MoodJournal'
+import MedicationTracker from '../components/Medication/MedicationTracker'
+import VaginalHealthTracker from '../components/Health/VaginalHealthTracker'
 
 const MOODS = ['😊 Happy', '😢 Sad', '😠 Angry', '😴 Tired', '😰 Anxious', '🥰 Loving', '😐 Neutral']
 const SYMPTOMS = ['Cramps', 'Headache', 'Bloating', 'Back Pain', 'Nausea', 'Fatigue', 'Spotting', 'Breast Tenderness', 'Mood Swings', 'Acne']
@@ -14,6 +18,7 @@ const EXERCISE_TYPES_HI = ['🚶 चलना', '🏃 दौड़ना', '🧘
 export default function Log({ userId, t }) {
   const [selectedMood, setSelectedMood] = useState('')
   const [selectedSymptoms, setSelectedSymptoms] = useState([])
+  const [customSymptomsList, setCustomSymptomsList] = useState([])
   const [notes, setNotes] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [flowLevel, setFlowLevel] = useState('')
@@ -233,6 +238,37 @@ export default function Log({ userId, t }) {
         </div>
       </div>
 
+      {/* Custom Symptoms */}
+      <CustomSymptoms
+        userId={userId}
+        isHindi={isHindi}
+        onSymptomsChange={setCustomSymptomsList}
+      />
+
+      {/* Custom Symptoms Toggle */}
+      {customSymptomsList.length > 0 && (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+          <h3 className="font-semibold text-gray-700 mb-3">
+            {isHindi ? '✨ मेरे लक्षण' : '✨ My Symptoms'}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {customSymptomsList.map(symptom => (
+              <button
+                key={symptom}
+                onClick={() => toggleSymptom(symptom)}
+                className={`py-1.5 px-3 rounded-full text-xs transition-all ${
+                  selectedSymptoms.includes(symptom)
+                    ? 'bg-rose-500 text-white'
+                    : 'bg-rose-50 text-gray-600 hover:bg-rose-100'
+                }`}
+              >
+                {symptom}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Symptom Tips */}
       <SymptomTips symptoms={selectedSymptoms} isHindi={isHindi} />
 
@@ -254,13 +290,23 @@ export default function Log({ userId, t }) {
         </div>
       )}
 
+      {/* Save Button */}
       <button
         onClick={handleSave}
         disabled={loading}
-        className="w-full bg-rose-500 text-white py-3 rounded-2xl font-medium hover:bg-rose-600 transition-all disabled:opacity-50 mb-4"
+        className="w-full bg-rose-500 text-white py-3 rounded-2xl font-medium hover:bg-rose-600 transition-all disabled:opacity-50"
       >
         {loading ? '...' : t.saveLog}
       </button>
+
+      {/* Mood Journal */}
+      <MoodJournal userId={userId} isHindi={isHindi} />
+
+      {/* Medication Tracker */}
+      <MedicationTracker userId={userId} isHindi={isHindi} />
+
+      {/* Vaginal Health Tracker */}
+      <VaginalHealthTracker userId={userId} isHindi={isHindi} />
 
     </div>
   )

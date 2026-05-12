@@ -3,6 +3,7 @@ import PeriodCalendar from '../components/Calendar/PeriodCalendar'
 import { useCycle } from '../hooks/useCycle'
 import PhaseCard from '../components/Predictions/PhaseCard'
 import { getCyclePhase } from '../lib/cyclePhase'
+import { useNotifications } from '../hooks/useNotifications'
 
 export default function Home({ userId, t }) {
   const {
@@ -11,22 +12,37 @@ export default function Home({ userId, t }) {
     getPeriodDates,
     getPredictedDates,
     getOvulationDate,
-    getDaysUntilNextPeriod,
-    getAvgCycleLength,
-    getNextPeriodDate,
-    logPeriod,
     getFertileWindowDates,
     getLutealDates,
+    getDaysUntilNextPeriod,
+    getAvgCycleLength,
+    getAvgPeriodDuration,
+    getNextPeriodDate,
+    logPeriod,
   } = useCycle(userId)
+
+  const {
+    permissionStatus,
+    notificationsEnabled,
+    inAppNotification,
+    enableNotifications,
+    dismissInAppNotification,
+  } = useNotifications(userId, {
+    getNextPeriodDate,
+    getOvulationDate,
+    getFertileWindowDates,
+  })
+
   const [showLogModal, setShowLogModal] = useState(false)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [logLoading, setLogLoading] = useState(false)
+  const [notifLoading, setNotifLoading] = useState(false)
 
   const handleLogPeriod = async () => {
     if (!startDate) return
     setLogLoading(true)
-    const defaultEnd = new Date(startDate)
+    const defaultEnd = new Date(startDate + 'T00:00:00')
     defaultEnd.setDate(defaultEnd.getDate() + 4)
     const finalEndDate = endDate || defaultEnd.toISOString().split('T')[0]
     await logPeriod(startDate, finalEndDate)
@@ -34,6 +50,12 @@ export default function Home({ userId, t }) {
     setShowLogModal(false)
     setStartDate('')
     setEndDate('')
+  }
+
+  const handleEnableNotifications = async () => {
+    setNotifLoading(true)
+    await enableNotifications()
+    setNotifLoading(false)
   }
 
   const nextPeriod = getNextPeriodDate()
@@ -51,6 +73,18 @@ export default function Home({ userId, t }) {
 
   return (
     <div className="max-w-md mx-auto">
+
+      {/* ── In-App Notification Toast ── */}
+      {inAppNotification && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm bg-white rounded-2xl shadow-lg border border-rose-100 p-4 flex items-start gap-3 animate-bounce">
+          <span className="text-2xl">🌸</span>
+          <div className="flex-1">
+            <p className="font-semibold text-gray-800 text-sm">{inAppNotification.title}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{inAppNotification.body}</p>
+          </div>
+          <button onClick={dismissInAppNotification} className="text-gray-300 hover:text-gray-500 text-lg">✕</button>
+        </div>
+      )}
 
       {/* Welcome Card */}
       <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-5 mb-4 text-white shadow-md">
@@ -76,6 +110,50 @@ export default function Home({ userId, t }) {
         )}
       </div>
 
+      {/* ── Notification Enable Banner ── */}
+      {permissionStatus !== 'granted' && !notificationsEnabled && (
+        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-4 flex items-center gap-3">
+          <span className="text-2xl">🔔</span>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-700">
+              {isHindi ? 'Reminders enable karein' : 'Enable Reminders'}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {isHindi ? 'Period, ovulation aur pad alerts paayein' : 'Get period, ovulation & pad alerts'}
+            </p>
+          </div>
+          <button
+            onClick={handleEnableNotifications}
+            disabled={notifLoading}
+            className="bg-rose-500 text-white text-xs px-3 py-2 rounded-xl font-medium disabled:opacity-50 whitespace-nowrap"
+          >
+            {notifLoading ? '...' : (isHindi ? 'Enable' : 'Enable')}
+          </button>
+        </div>
+      )}
+
+      {/* Notifications enabled confirmation */}
+      {notificationsEnabled && (
+        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 mb-4 flex items-center gap-2">
+          <span>✅</span>
+          <p className="text-xs text-emerald-700 font-medium">
+            {isHindi ? 'Reminders active hain 🌸' : 'Reminders are active 🌸'}
+          </p>
+        </div>
+      )}
+
+      {/* Notification denied message */}
+      {permissionStatus === 'denied' && (
+        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-3 mb-4 flex items-center gap-2">
+          <span>🔕</span>
+          <p className="text-xs text-gray-500">
+            {isHindi
+              ? 'Notifications blocked hain — browser settings se enable karein'
+              : 'Notifications blocked — enable from browser settings'}
+          </p>
+        </div>
+      )}
+
       {/* Log Period Button */}
       <button
         onClick={() => setShowLogModal(true)}
@@ -84,7 +162,7 @@ export default function Home({ userId, t }) {
         {t.logPeriod}
       </button>
 
-      {/* ✅ FIX: fertileWindowDates aur lutealDates ab pass ho rahe hain */}
+      {/* Calendar */}
       <PeriodCalendar
         periodDates={getPeriodDates()}
         predictedDates={getPredictedDates()}
@@ -101,12 +179,12 @@ export default function Home({ userId, t }) {
           <p className="text-xs text-gray-400 mt-1">{t.cycleLength}</p>
         </div>
         <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-rose-50">
-          <p className="text-2xl font-bold text-rose-500">5</p>
+          <p className="text-2xl font-bold text-rose-500">{getAvgPeriodDuration()}</p>
           <p className="text-xs text-gray-400 mt-1">{t.periodDays}</p>
         </div>
         <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-rose-50">
           <p className="text-2xl font-bold text-emerald-500">
-            {getOvulationDate() ? new Date(getOvulationDate()).getDate() : '-'}
+            {getOvulationDate() ? new Date(getOvulationDate() + 'T00:00:00').getDate() : '-'}
           </p>
           <p className="text-xs text-gray-400 mt-1">{t.ovulationDay}</p>
         </div>
@@ -123,14 +201,14 @@ export default function Home({ userId, t }) {
             <div className="flex justify-between items-center">
               <p className="text-sm text-emerald-600">Ovulation Date</p>
               <p className="text-sm font-bold text-emerald-700">
-                {new Date(getOvulationDate()).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}
+                {new Date(getOvulationDate() + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}
               </p>
             </div>
             <div className="flex justify-between items-center">
               <p className="text-sm text-emerald-600">Fertile Window Starts</p>
               <p className="text-sm font-bold text-emerald-700">
                 {(() => {
-                  const d = new Date(getOvulationDate())
+                  const d = new Date(getOvulationDate() + 'T00:00:00')
                   d.setDate(d.getDate() - 5)
                   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })
                 })()}
@@ -140,7 +218,7 @@ export default function Home({ userId, t }) {
               <p className="text-sm text-emerald-600">Fertile Window Ends</p>
               <p className="text-sm font-bold text-emerald-700">
                 {(() => {
-                  const d = new Date(getOvulationDate())
+                  const d = new Date(getOvulationDate() + 'T00:00:00')
                   d.setDate(d.getDate() + 1)
                   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })
                 })()}
@@ -180,13 +258,13 @@ export default function Home({ userId, t }) {
                 <p className="text-xs text-rose-500 font-medium">📅 Expected to end between:</p>
                 <p className="text-sm font-bold text-rose-700 mt-1">
                   {(() => {
-                    const s = new Date(startDate)
+                    const s = new Date(startDate + 'T00:00:00')
                     const min = new Date(s); min.setDate(min.getDate() + 2)
                     const max = new Date(s); max.setDate(max.getDate() + 6)
                     return `${min.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – ${max.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
                   })()}
                 </p>
-                <p className="text-xs text-rose-400 mt-1">Based on average 3–7 day cycle</p>
+                <p className="text-xs text-rose-400 mt-1">Based on average 3–7 day period</p>
               </div>
             )}
 

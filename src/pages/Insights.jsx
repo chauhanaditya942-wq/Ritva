@@ -25,7 +25,6 @@ export default function Insights({ userId, t }) {
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false })
-      .limit(7)
     if (data) setRecentLogs(data)
   }
 
@@ -35,7 +34,6 @@ export default function Insights({ userId, t }) {
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false })
-      .limit(7)
     if (data) setHealthLogs(data)
   }
 
@@ -86,10 +84,11 @@ export default function Insights({ userId, t }) {
       </div>
 
       {/* ── Cycle Charts ── */}
-      <CycleChart
-        periodLogs={periodLogs}
-        healthLogs={healthLogs}
-        isHindi={isHindi}
+     <CycleChart
+  periodLogs={periodLogs}
+  healthLogs={healthLogs}
+  symptomLogs={recentLogs}
+  isHindi={isHindi}
       />
 
       {/* AI Chat Toggle */}
@@ -161,18 +160,35 @@ export default function Insights({ userId, t }) {
         ) : (
           <div className="space-y-2">
             {recentLogs.map(log => (
-              <div key={log.id} className="flex justify-between items-center py-2 border-b border-rose-50 last:border-0">
-                <div>
+              <div key={log.id} className="py-2 border-b border-rose-50 last:border-0">
+                <div className="flex justify-between items-center mb-1">
                   <p className="text-sm font-medium text-gray-700">{log.mood}</p>
-                  {log.symptoms.length > 0 && (
-                    <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400">
+                    {new Date(log.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {log.pain_level > 0 && (
+                    <span className="text-xs bg-rose-50 text-rose-500 px-2 py-0.5 rounded-full">😣 Pain: {log.pain_level}/10</span>
+                  )}
+                  {log.sleep_hours && (
+                    <span className="text-xs bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full">😴 {log.sleep_hours}h sleep</span>
+                  )}
+                  {log.water_intake && (
+                    <span className="text-xs bg-cyan-50 text-cyan-500 px-2 py-0.5 rounded-full">💧 {log.water_intake} glasses</span>
+                  )}
+                  {log.flow_level && (
+                    <span className="text-xs bg-pink-50 text-pink-500 px-2 py-0.5 rounded-full">{log.flow_level}</span>
+                  )}
+                  {log.exercise_done && (
+                    <span className="text-xs bg-emerald-50 text-emerald-500 px-2 py-0.5 rounded-full">🏃 {log.exercise_type || 'Exercise'}</span>
+                  )}
+                  {log.symptoms?.length > 0 && (
+                    <span className="text-xs bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full">
                       {log.symptoms.slice(0, 2).join(', ')}{log.symptoms.length > 2 ? '...' : ''}
-                    </p>
+                    </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-400">
-                  {new Date(log.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                </p>
               </div>
             ))}
           </div>
