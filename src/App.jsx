@@ -6,6 +6,8 @@ import Home from './pages/Home'
 import Log from './pages/Log'
 import Insights from './pages/Insights'
 import Profile from './pages/Profile'
+import Partner from './pages/Partner'
+import DoctorReport from './pages/DoctorReport'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -65,6 +67,8 @@ function App() {
         {activePage === 'home' && <Home userId={session.user.id} t={t} />}
         {activePage === 'log' && <Log userId={session.user.id} t={t} />}
         {activePage === 'insights' && <Insights userId={session.user.id} t={t} />}
+        {activePage === 'partner' && <Partner userId={session.user.id} t={t} />}
+        {activePage === 'doctorreport' && <DoctorReport userId={session.user.id} t={t} />}
         {activePage === 'profile' && <Profile userId={session.user.id} t={t} />}
       </main>
 
@@ -89,6 +93,20 @@ function App() {
         >
           <span className="text-xl">📊</span>
           {t.insights}
+        </button>
+        <button
+          onClick={() => setActivePage('partner')}
+          className={`flex flex-col items-center text-xs gap-1 ${activePage === 'partner' ? 'text-rose-500' : 'text-gray-400'}`}
+        >
+          <span className="text-xl">💑</span>
+          {t.partner || 'Partner'}
+        </button>
+        <button
+          onClick={() => setActivePage('doctorreport')}
+          className={`flex flex-col items-center text-xs gap-1 ${activePage === 'doctorreport' ? 'text-rose-500' : 'text-gray-400'}`}
+        >
+          <span className="text-xl">📋</span>
+          {t.doctorReport || 'Report'}
         </button>
         <button
           onClick={() => setActivePage('profile')}
