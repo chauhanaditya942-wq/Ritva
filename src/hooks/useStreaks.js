@@ -22,11 +22,11 @@ export function useStreaks(userId) {
   const fetchStreaks = async () => {
     if (!userId) return;
     // Get streak data
-    const { data: streakRow } = await supabase
-      .from('user_streaks')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    const { data } = await supabase
+  .from('user_streaks')
+  .select('*')
+  .eq('user_id', userId)
+  .maybeSingle()
     // Get earned badges
     const { data: badges } = await supabase
       .from('user_badges')
