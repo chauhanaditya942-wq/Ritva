@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { requestNotificationPermission, onForegroundMessage } from '../lib/firebase'
  
 const showLocalNotification = (title, body) => {
   if (Notification.permission === 'granted') {
@@ -33,32 +32,19 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
   const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted')
   const [inAppNotification, setInAppNotification] = useState(null)
  
-  const saveTokenToSupabase = async (token) => {
-    if (!userId || !token) return
-    await supabase
-  .from('user_fcm_tokens')
-  .upsert({ user_id: userId, token, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
-  }
- 
-  const enableNotifications = async () => {
-    const token = await requestNotificationPermission()
-    if (token) {
-      setFcmToken(token)
-      setPermissionStatus('granted')
-      setNotificationsEnabled(true)
-      await saveTokenToSupabase(token)
-      onForegroundMessage((payload) => {
-        setInAppNotification({
-          title: payload.notification?.title,
-          body: payload.notification?.body,
-        })
-        setTimeout(() => setInAppNotification(null), 5000)
-      })
-      return true
-    }
+ const enableNotifications = async () => {
+  try {
+    const { default: OneSignal } = await import('react-onesignal')
+    await OneSignal.Notifications.requestPermission()
+    setPermissionStatus('granted')
+    setNotificationsEnabled(true)
+    return true
+  } catch (err) {
+    console.error('Notification error:', err)
     setPermissionStatus('denied')
     return false
   }
+}
  
   // Aaj ka symptom log fetch karo
   const fetchTodayLog = async () => {
