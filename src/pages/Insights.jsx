@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { useCycle } from '../hooks/useCycle'
 import ChatAssistant from '../components/AI/ChatAssistant'
@@ -53,46 +54,57 @@ export default function Insights({ userId, t }) {
   const ovulationDate = getOvulationDate()
   const daysUntil = getDaysUntilNextPeriod()
 
+  const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } }
+  const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }
+  const item = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }
+
   return (
     <div className="max-w-md mx-auto">
 
-      {/* Cycle Stats */}
-      <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-5 mb-4 text-white shadow-md">
-        <h2 className="font-bold text-lg mb-3">{t.cycleSummary}</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white/20 rounded-xl p-3">
+      <motion.div
+        {...fadeIn}
+        whileHover={{ scale: 1.01 }}
+        className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-5 mb-4 text-white shadow-md relative overflow-hidden"
+      >
+        <h2 className="font-bold text-lg mb-3 relative z-10">{t.cycleSummary}</h2>
+        <motion.div variants={stagger} initial="hidden" animate="visible" className="grid grid-cols-2 gap-3 relative z-10">
+          <motion.div variants={item} className="bg-white/20 rounded-xl p-3">
             <p className="text-xs text-rose-100">{t.avgCycleLength}</p>
             <p className="text-2xl font-bold">{getAvgCycleLength()} {t.days}</p>
-          </div>
-          <div className="bg-white/20 rounded-xl p-3">
+          </motion.div>
+          <motion.div variants={item} className="bg-white/20 rounded-xl p-3">
             <p className="text-xs text-rose-100">{t.nextPeriod}</p>
             <p className="text-2xl font-bold">{daysUntil !== null ? `${daysUntil} ${t.days}` : '-'}</p>
-          </div>
-          <div className="bg-white/20 rounded-xl p-3">
+          </motion.div>
+          <motion.div variants={item} className="bg-white/20 rounded-xl p-3">
             <p className="text-xs text-rose-100">{t.totalCycles}</p>
             <p className="text-2xl font-bold">{periodLogs.length}</p>
-          </div>
-          <div className="bg-white/20 rounded-xl p-3">
+          </motion.div>
+          <motion.div variants={item} className="bg-white/20 rounded-xl p-3">
             <p className="text-xs text-rose-100">{t.ovulationDate}</p>
             <p className="text-lg font-bold">
               {ovulationDate
                 ? new Date(ovulationDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
                 : '-'}
             </p>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
 
-      {/* ── Cycle Charts ── */}
-     <CycleChart
-  periodLogs={periodLogs}
-  healthLogs={healthLogs}
-  symptomLogs={recentLogs}
-  isHindi={isHindi}
-      />
+      {/* Cycle Charts */}
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <CycleChart
+          periodLogs={periodLogs}
+          healthLogs={healthLogs}
+          symptomLogs={recentLogs}
+          isHindi={isHindi}
+        />
+      </motion.div>
 
       {/* AI Chat Toggle */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={() => setShowChat(!showChat)}
         className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-2xl font-medium mt-4 mb-4 shadow-sm flex items-center justify-center gap-2"
       >
@@ -100,29 +112,34 @@ export default function Insights({ userId, t }) {
         {showChat
           ? (isHindi ? 'AI Chat बंद करें' : 'Close AI Chat')
           : (isHindi ? 'RITVA AI से पूछें' : 'Ask RITVA AI')}
-      </button>
+      </motion.button>
 
       {/* AI Chat */}
       {showChat && (
-        <div className="mb-4">
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mb-4"
+        >
           <ChatAssistant
             userId={userId}
             periodLogs={periodLogs}
             recentSymptoms={recentLogs}
             isHindi={isHindi}
           />
-        </div>
+        </motion.div>
       )}
 
       {/* Period History */}
-      <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.15 }} className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-3">{t.periodHistory}</h3>
         {periodLogs.length === 0 ? (
           <p className="text-gray-400 text-sm text-center py-4">{t.noPeriodsLogged}</p>
         ) : (
           <div className="space-y-2">
-            {periodLogs.slice(0, 5).map(log => (
-              <div key={log.id} className="py-2 border-b border-rose-50 last:border-0">
+            {periodLogs.slice(0, 5).map((log, idx) => (
+              <motion.div key={log.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="py-2 border-b border-rose-50 last:border-0">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm font-medium text-gray-700">
@@ -138,29 +155,31 @@ export default function Insights({ userId, t }) {
                         {Math.ceil((new Date(log.end_date) - new Date(log.start_date)) / (1000 * 60 * 60 * 24) + 1)} {t.days}
                       </p>
                     </div>
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => setEditingLog(log)}
                       className="text-xs bg-rose-100 text-rose-500 px-2 py-1 rounded-full hover:bg-rose-200"
                     >
                       ✏️
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Recent Mood Logs */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.2 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-3">{t.recentMoodLogs}</h3>
         {recentLogs.length === 0 ? (
           <p className="text-gray-400 text-sm text-center py-4">{t.noMoodLogs}</p>
         ) : (
           <div className="space-y-2">
-            {recentLogs.map(log => (
-              <div key={log.id} className="py-2 border-b border-rose-50 last:border-0">
+            {recentLogs.map((log, idx) => (
+              <motion.div key={log.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="py-2 border-b border-rose-50 last:border-0">
                 <div className="flex justify-between items-center mb-1">
                   <p className="text-sm font-medium text-gray-700">{log.mood}</p>
                   <p className="text-xs text-gray-400">
@@ -189,16 +208,16 @@ export default function Insights({ userId, t }) {
                     </span>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Edit End Date Modal */}
       {editingLog && (
-        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
-          <div className="bg-white w-full max-w-md rounded-t-3xl p-6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
+          <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: 'spring', damping: 25 }} className="bg-white w-full max-w-md rounded-t-3xl p-6">
             <h3 className="text-lg font-bold text-gray-700 mb-4">
               {isHindi ? 'अंत तारीख अपडेट करें' : 'Update End Date'} 🌸
             </h3>
@@ -217,21 +236,15 @@ export default function Insights({ userId, t }) {
               />
             </div>
             <div className="flex gap-3">
-              <button
-                onClick={() => { setEditingLog(null); setNewEndDate('') }}
-                className="flex-1 py-3 rounded-xl border border-rose-100 text-gray-400 text-sm"
-              >
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setEditingLog(null); setNewEndDate('') }} className="flex-1 py-3 rounded-xl border border-rose-100 text-gray-400 text-sm">
                 {isHindi ? 'रद्द करें' : 'Cancel'}
-              </button>
-              <button
-                onClick={handleUpdateEndDate}
-                className="flex-1 py-3 rounded-xl bg-rose-500 text-white text-sm font-medium"
-              >
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleUpdateEndDate} className="flex-1 py-3 rounded-xl bg-rose-500 text-white text-sm font-medium">
                 {isHindi ? 'अपडेट करें' : 'Update'}
-              </button>
+              </motion.button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 
 export default function MoodJournal({ userId, isHindi }) {
@@ -84,8 +85,12 @@ Journal entry: "${text}"`
     return '💭'
   }
 
+  const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } }
+  const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }
+  const item = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }
+
   return (
-    <div className="space-y-4">
+    <motion.div {...fadeIn} className="space-y-4">
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-3">
           📔 {isHindi ? 'मूड जर्नल' : 'Mood Journal'}
@@ -100,18 +105,20 @@ Journal entry: "${text}"`
           rows={4}
           className="w-full px-4 py-3 rounded-xl border border-rose-100 focus:outline-none focus:border-rose-400 text-sm resize-none"
         />
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleSave}
           disabled={loading || !entry.trim()}
           className="w-full mt-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 rounded-xl font-medium disabled:opacity-50"
         >
           {loading ? (isHindi ? 'AI analyze कर रहा है... 🤖' : 'AI analyzing... 🤖') : (isHindi ? 'सेव करें + AI Analysis' : 'Save + AI Analysis')}
-        </button>
+        </motion.button>
       </div>
 
       {/* AI Analysis Result */}
       {analysis && (
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-100">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-100">
           <h3 className="font-semibold text-purple-700 mb-3">🤖 AI Analysis</h3>
           <div className="flex gap-2 flex-wrap mb-3">
             {analysis.emotions?.map((e, i) => (
@@ -129,18 +136,18 @@ Journal entry: "${text}"`
           <p className={`text-xs mt-2 font-medium ${sentimentColor(analysis.sentiment)}`}>
             {sentimentEmoji(analysis.sentiment)} {analysis.sentiment}
           </p>
-        </div>
+        </motion.div>
       )}
 
       {/* Past Entries */}
       {pastEntries.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
           <h3 className="font-semibold text-gray-700 mb-3">
             {isHindi ? '📅 पिछले entries' : '📅 Past Entries'}
           </h3>
-          <div className="space-y-3">
+          <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-3">
             {pastEntries.map(log => (
-              <div key={log.id} className="border-b border-rose-50 pb-3 last:border-0">
+              <motion.div key={log.id} variants={item} className="border-b border-rose-50 pb-3 last:border-0">
                 <div className="flex justify-between items-center mb-1">
                   <p className="text-xs text-gray-400">
                     {new Date(log.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
@@ -155,11 +162,11 @@ Journal entry: "${text}"`
                 {log.ai_analysis && (
                   <p className="text-xs text-purple-500 mt-1 line-clamp-1">🤖 {log.ai_analysis}</p>
                 )}
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }

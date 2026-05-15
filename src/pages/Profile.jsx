@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import HealthTracker from '../components/Calendar/HealthTracker'
 import WaterTracker from '../components/Water/WaterTracker'
+
 export default function Profile({ userId, t }) {
   const [profile, setProfile] = useState({
     name: '',
@@ -55,17 +57,28 @@ export default function Profile({ userId, t }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="text-rose-400 text-4xl animate-pulse">🌸</div>
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="text-rose-400 text-4xl"
+        >
+          🌸
+        </motion.div>
       </div>
     )
   }
 
+  const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } }
+
   return (
     <div className="max-w-md mx-auto space-y-4">
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-5 text-white shadow-md">
-        <div className="flex items-center gap-4">
+    <motion.div
+  {...fadeIn}
+  whileHover={{ scale: 1.01 }}
+  className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-5 text-white shadow-md relative overflow-hidden"
+>
+        <div className="flex items-center gap-4 relative z-10">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl">
             👩
           </div>
@@ -76,10 +89,10 @@ export default function Profile({ userId, t }) {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Personal Info */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.05 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-4">
           {isHindi ? '👤 व्यक्तिगत जानकारी' : '👤 Personal Info'}
         </h3>
@@ -135,10 +148,10 @@ export default function Profile({ userId, t }) {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Cycle Info */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-4">
           {isHindi ? '🌸 मासिक धर्म जानकारी' : '🌸 Cycle Information'}
         </h3>
@@ -176,26 +189,45 @@ export default function Profile({ userId, t }) {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Save */}
       {success && (
-        <div className="bg-emerald-50 text-emerald-600 text-center py-2 rounded-xl text-sm">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-emerald-50 text-emerald-600 text-center py-2 rounded-xl text-sm">
           ✅ {isHindi ? 'सफलतापूर्वक सेव हो गया!' : 'Saved successfully!'}
-        </div>
+        </motion.div>
       )}
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={handleSave}
         disabled={saving}
         className="w-full bg-rose-500 text-white py-3 rounded-2xl font-medium hover:bg-rose-600 transition-all disabled:opacity-50"
       >
         {saving ? '...' : (isHindi ? 'सेव करें' : 'Save Profile')}
-      </button>
-{/* Water Tracker */}
-<WaterTracker userId={userId} isHindi={isHindi} />
+      </motion.button>
+
+      {/* Water Tracker */}
+      <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }}>
+        <WaterTracker userId={userId} isHindi={isHindi} />
+      </motion.div>
+
       {/* Health Tracker */}
-      <HealthTracker userId={userId} isHindi={isHindi} />
+      <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }}>
+        <HealthTracker userId={userId} isHindi={isHindi} />
+      </motion.div>
+
+      {/* Floral decorative element at bottom */}
+      <div className="flex justify-center mt-4 opacity-30 pointer-events-none">
+        <motion.span
+          animate={{ y: [0, -5, 0], rotate: [0, 3, -3, 0] }}
+          transition={{ duration: 4, repeat: Infinity }}
+          className="text-4xl"
+        >
+          🌸🌿
+        </motion.span>
+      </div>
 
     </div>
   )

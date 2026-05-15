@@ -1,30 +1,36 @@
 import { useState, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 
 const DAILY_GOAL = 8
-const REMINDER_INTERVAL_MS = 2 * 60 * 60 * 1000 // 2 ghante
+const REMINDER_INTERVAL_MS = 2 * 60 * 60 * 1000
 
 export default function WaterTracker({ userId, isHindi }) {
   const [glasses, setGlasses] = useState(0)
   const [loading, setLoading] = useState(true)
   const [notifEnabled, setNotifEnabled] = useState(false)
-  const today = new Date().toISOString().split('T')[0]
 
-  // ── Fetch today's log ──────────────────────────────────────
+  const today = new Date().toISOString().split('T')[0]
+  
+  const tomorrowDate = new Date()
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1)
+  const tomorrow = tomorrowDate.toISOString().split('T')[0]
+
   const fetchToday = useCallback(async () => {
     const { data } = await supabase
       .from('water_logs')
       .select('*')
       .eq('user_id', userId)
-      .eq('date', today)
-      .single()
+      .gte('date', today)
+      .lt('date', tomorrow)
+      .maybeSingle()
+    
     if (data) setGlasses(data.glasses)
     setLoading(false)
-  }, [userId, today])
+  }, [userId, today, tomorrow])
 
   useEffect(() => { fetchToday() }, [fetchToday])
 
-  // ── Save to Supabase ───────────────────────────────────────
   const saveGlasses = async (count) => {
     await supabase
       .from('water_logs')
@@ -36,14 +42,12 @@ export default function WaterTracker({ userId, isHindi }) {
       }, { onConflict: 'user_id,date' })
   }
 
-  // ── Add glass ──────────────────────────────────────────────
   const addGlass = async () => {
     const newCount = glasses + 1
     setGlasses(newCount)
     await saveGlasses(newCount)
   }
 
-  // ── Remove glass ───────────────────────────────────────────
   const removeGlass = async () => {
     if (glasses === 0) return
     const newCount = glasses - 1
@@ -51,7 +55,6 @@ export default function WaterTracker({ userId, isHindi }) {
     await saveGlasses(newCount)
   }
 
-  // ── Notifications ──────────────────────────────────────────
   const requestNotifPermission = async () => {
     if (!('Notification' in window)) {
       alert(isHindi ? 'आपका browser notifications support नहीं करता' : 'Your browser does not support notifications')
@@ -90,7 +93,6 @@ export default function WaterTracker({ userId, isHindi }) {
     }, REMINDER_INTERVAL_MS)
   }
 
-  // ── Progress ───────────────────────────────────────────────
   const percent = Math.min((glasses / DAILY_GOAL) * 100, 100)
   const remaining = Math.max(DAILY_GOAL - glasses, 0)
 
@@ -109,8 +111,7 @@ export default function WaterTracker({ userId, isHindi }) {
   if (loading) return <div className="text-center py-4 text-rose-300">💧</div>
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-cyan-100 space-y-4">
-
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-4 shadow-sm border border-cyan-100 space-y-4">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h3 className="font-semibold text-gray-700">
@@ -126,9 +127,11 @@ export default function WaterTracker({ userId, isHindi }) {
           <span>{isHindi ? `${remaining} बाकी` : `${remaining} remaining`}</span>
         </div>
         <div className="w-full bg-cyan-50 rounded-full h-3">
-          <div
-            className="bg-gradient-to-r from-cyan-400 to-blue-400 h-3 rounded-full transition-all duration-500"
-            style={{ width: `${percent}%` }}
+          <motion.div
+            className="bg-gradient-to-r from-cyan-400 to-blue-400 h-3 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${percent}%` }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           />
         </div>
         <p className="text-xs text-gray-400 mt-1 text-right">
@@ -139,8 +142,9 @@ export default function WaterTracker({ userId, isHindi }) {
       {/* Glass Grid */}
       <div className="grid grid-cols-8 gap-1">
         {Array.from({ length: DAILY_GOAL }, (_, i) => (
-          <div
+          <motion.div
             key={i}
+            whileHover={{ scale: 1.2 }}
             className={`aspect-square rounded-lg flex items-center justify-center text-lg transition-all ${
               i < glasses
                 ? 'bg-cyan-100 scale-105'
@@ -148,32 +152,34 @@ export default function WaterTracker({ userId, isHindi }) {
             }`}
           >
             {i < glasses ? '💧' : '○'}
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* Add/Remove Buttons */}
       <div className="flex items-center gap-3">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={removeGlass}
           disabled={glasses === 0}
           className="w-10 h-10 rounded-full bg-rose-50 text-rose-400 text-xl font-bold hover:bg-rose-100 disabled:opacity-30 transition-all"
-        >
-          −
-        </button>
-        <button
+        >−</motion.button>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={addGlass}
           className="flex-1 py-3 bg-gradient-to-r from-cyan-400 to-blue-400 text-white rounded-xl font-medium hover:opacity-90 transition-all"
         >
           {isHindi ? '+ एक गिलास पिया 💧' : '+ I drank a glass 💧'}
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={removeGlass}
           disabled={glasses === 0}
           className="w-10 h-10 rounded-full bg-rose-50 text-rose-400 text-xl font-bold hover:bg-rose-100 disabled:opacity-30 transition-all"
-        >
-          −
-        </button>
+        >−</motion.button>
       </div>
 
       {/* Scientific Info */}
@@ -195,7 +201,9 @@ export default function WaterTracker({ userId, isHindi }) {
             {isHindi ? 'हर 2 घंटे में notification' : 'Notification every 2 hours'}
           </p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={notifEnabled ? () => setNotifEnabled(false) : requestNotifPermission}
           className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
             notifEnabled
@@ -203,12 +211,9 @@ export default function WaterTracker({ userId, isHindi }) {
               : 'bg-gray-200 text-gray-500'
           }`}
         >
-          {notifEnabled
-            ? (isHindi ? 'चालू ✓' : 'ON ✓')
-            : (isHindi ? 'बंद' : 'OFF')}
-        </button>
+          {notifEnabled ? (isHindi ? 'चालू ✓' : 'ON ✓') : (isHindi ? 'बंद' : 'OFF')}
+        </motion.button>
       </div>
-
-    </div>
+    </motion.div>
   )
 }

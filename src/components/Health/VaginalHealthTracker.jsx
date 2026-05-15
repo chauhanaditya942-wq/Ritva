@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 
 const DISCHARGE_TYPES = ['None', 'Normal', 'Spotting', 'Heavy', 'Unusual']
@@ -68,8 +69,10 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
   const consistency = isHindi ? CONSISTENCY_HI : CONSISTENCY
   const odors = isHindi ? ODORS_HI : ODORS
 
+  const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } }
+
   return (
-    <div className="space-y-4">
+    <motion.div {...fadeIn} className="space-y-4">
 
       {/* Header */}
       <div className="bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl p-4 text-white">
@@ -81,12 +84,12 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
 
       {/* Warning */}
       {showWarning && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 border border-red-200 rounded-2xl p-4">
           <p className="text-red-600 text-sm font-medium">⚠️ {isHindi ? 'डॉक्टर से मिलें' : 'Consult a doctor'}</p>
           <p className="text-red-500 text-xs mt-1">
             {isHindi ? 'असामान्य discharge infection का संकेत हो सकता है' : 'Unusual discharge may indicate an infection'}
           </p>
-        </div>
+        </motion.div>
       )}
 
       {/* Form */}
@@ -99,8 +102,10 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
           </label>
           <div className="flex flex-wrap gap-2 mt-2">
             {dischargeTypes.map((type, i) => (
-              <button
+              <motion.button
                 key={type}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setDischargeType(DISCHARGE_TYPES[i])}
                 className={`text-xs px-3 py-1.5 rounded-full transition-all ${
                   dischargeType === DISCHARGE_TYPES[i]
@@ -109,7 +114,7 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
                 }`}
               >
                 {type}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -121,8 +126,10 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
           </label>
           <div className="flex flex-wrap gap-2 mt-2">
             {colors.map((color, i) => (
-              <button
+              <motion.button
                 key={color}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setDischargeColor(COLORS[i])}
                 className={`text-xs px-3 py-1.5 rounded-full transition-all ${
                   dischargeColor === COLORS[i]
@@ -131,7 +138,7 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
                 }`}
               >
                 {color}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -143,8 +150,10 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
           </label>
           <div className="flex flex-wrap gap-2 mt-2">
             {consistency.map((c, i) => (
-              <button
+              <motion.button
                 key={c}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setDischargeConsistency(CONSISTENCY[i])}
                 className={`text-xs px-3 py-1.5 rounded-full transition-all ${
                   dischargeConsistency === CONSISTENCY[i]
@@ -153,7 +162,7 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
                 }`}
               >
                 {c}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -165,8 +174,10 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
           </label>
           <div className="flex flex-wrap gap-2 mt-2">
             {odors.map((o, i) => (
-              <button
+              <motion.button
                 key={o}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setOdor(ODORS[i])}
                 className={`text-xs px-3 py-1.5 rounded-full transition-all ${
                   odor === ODORS[i]
@@ -175,7 +186,7 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
                 }`}
               >
                 {o}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -186,22 +197,26 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
             {isHindi ? 'खुजली' : 'Itching'}
           </label>
           <div className="flex gap-3 mt-2">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setItching(false)}
               className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
                 !itching ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
               }`}
             >
               {isHindi ? 'नहीं' : 'No'}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setItching(true)}
               className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
                 itching ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-500'
               }`}
             >
               {isHindi ? 'हाँ' : 'Yes'}
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -218,18 +233,20 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
         </div>
 
         {success && (
-          <div className="bg-emerald-50 text-emerald-600 text-center py-2 rounded-xl text-sm">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-emerald-50 text-emerald-600 text-center py-2 rounded-xl text-sm">
             ✅ {isHindi ? 'सेव हो गया!' : 'Saved!'}
-          </div>
+          </motion.div>
         )}
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleSave}
           disabled={loading}
           className="w-full py-3 bg-rose-500 text-white rounded-xl font-medium disabled:opacity-50"
         >
           {loading ? '...' : (isHindi ? 'सेव करें' : 'Save')}
-        </button>
+        </motion.button>
       </div>
 
       {/* Education Card */}
@@ -256,7 +273,7 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
 
       {/* Recent Logs */}
       {recentLogs.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
           <h4 className="font-medium text-gray-700 mb-3">
             {isHindi ? 'हाल के records' : 'Recent Records'}
           </h4>
@@ -286,8 +303,8 @@ export default function VaginalHealthTracker({ userId, isHindi }) {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }

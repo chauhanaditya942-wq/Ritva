@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'   // ✅ new import
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = [
@@ -152,7 +153,11 @@ export default function PeriodCalendar({
   const selectedDetail = selectedType ? TYPE_DETAIL[selectedType] : null
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-rose-100 overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-2xl shadow-sm border border-rose-100 overflow-hidden"
+    >
 
       {/* ── Today's Phase Banner ── */}
       <div className="bg-gradient-to-r from-rose-500 to-pink-400 px-4 pt-4 pb-3">
@@ -172,17 +177,21 @@ export default function PeriodCalendar({
 
         {/* ── Month Navigation ── */}
         <div className="flex items-center justify-between mb-4">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={prevMonth}
             className="w-8 h-8 rounded-full bg-rose-50 text-rose-500 font-bold hover:bg-rose-100 transition-colors"
-          >‹</button>
+          >‹</motion.button>
           <h3 className="font-bold text-gray-700 text-base">
             {MONTHS[currentMonth]} {currentYear}
           </h3>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={nextMonth}
             className="w-8 h-8 rounded-full bg-rose-50 text-rose-500 font-bold hover:bg-rose-100 transition-colors"
-          >›</button>
+          >›</motion.button>
         </div>
 
         {/* ── Day Name Headers ── */}
@@ -203,13 +212,14 @@ export default function PeriodCalendar({
             const isSelected = selectedDay === day
 
             return (
-              <button
+              <motion.button
                 key={day}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => handleDayClick(day)}
                 style={{
                   backgroundColor: cfg.bg,
                   color: cfg.text,
-                  // ✅ FIX: today pe hamesha red outline, chahe koi bhi phase ho
                   outline: isSelected ? '2px solid #f43f5e' : todayDay ? '2px solid #f43f5e' : 'none',
                   outlineOffset: '2px',
                   border: type === 'predicted' ? '1.5px dashed #fda4af' : 'none',
@@ -223,14 +233,16 @@ export default function PeriodCalendar({
                     className="absolute bottom-0.5 w-1 h-1 rounded-full opacity-70"
                   />
                 )}
-              </button>
+              </motion.button>
             )
           })}
         </div>
 
         {/* ── Selected Day Detail Card ── */}
         {selectedDay && selectedDetail && (
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             style={{ borderColor: selectedConfig.dot, borderWidth: '1.5px' }}
             className="mt-4 rounded-2xl p-4 bg-white border transition-all"
           >
@@ -259,11 +271,16 @@ export default function PeriodCalendar({
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* ── Legend ── */}
-        <div className="flex flex-wrap gap-x-3 gap-y-2 mt-4 pt-3 border-t border-rose-50">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex flex-wrap gap-x-3 gap-y-2 mt-4 pt-3 border-t border-rose-50"
+        >
           {LEGEND.map(({ type, label }) => {
             const cfg = TYPE_CONFIG[type]
             return (
@@ -283,7 +300,7 @@ export default function PeriodCalendar({
             <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid #f43f5e', flexShrink: 0 }} />
             <span className="text-xs text-gray-500">Today</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* ── Phase Timeline Bar ── */}
         <div className="mt-4 pt-3 border-t border-rose-50">
@@ -306,6 +323,6 @@ export default function PeriodCalendar({
         </div>
 
       </div>
-    </div>
+    </motion.div>
   )
 }

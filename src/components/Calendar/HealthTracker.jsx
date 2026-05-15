@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 
 export default function HealthTracker({ userId, isHindi }) {
@@ -10,9 +11,7 @@ export default function HealthTracker({ userId, isHindi }) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  useEffect(() => {
-    fetchLogs()
-  }, [])
+  useEffect(() => { fetchLogs() }, [])
 
   const fetchLogs = async () => {
     const { data } = await supabase
@@ -45,8 +44,10 @@ export default function HealthTracker({ userId, isHindi }) {
     }
   }
 
+  const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } }
+
   return (
-    <div className="space-y-4">
+    <motion.div {...fadeIn} className="space-y-4">
 
       {/* Input Card */}
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
@@ -104,23 +105,25 @@ export default function HealthTracker({ userId, isHindi }) {
         </div>
 
         {success && (
-          <div className="bg-emerald-50 text-emerald-600 text-center py-2 rounded-xl mb-3 text-sm">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-emerald-50 text-emerald-600 text-center py-2 rounded-xl mb-3 text-sm">
             ✅ {isHindi ? 'सेव हो गया!' : 'Saved!'}
-          </div>
+          </motion.div>
         )}
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleSave}
           disabled={loading}
           className="w-full bg-rose-500 text-white py-3 rounded-xl font-medium hover:bg-rose-600 transition-all disabled:opacity-50"
         >
           {loading ? '...' : (isHindi ? 'सेव करें' : 'Save')}
-        </button>
+        </motion.button>
       </div>
 
       {/* Recent Logs */}
       {logs.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
           <h3 className="font-semibold text-gray-700 mb-3">
             {isHindi ? 'हाल के रिकॉर्ड' : 'Recent Records'}
           </h3>
@@ -145,8 +148,8 @@ export default function HealthTracker({ userId, isHindi }) {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }

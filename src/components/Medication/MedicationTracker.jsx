@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 
 const COMMON_MEDS = ['Iron', 'Folic Acid', 'Vitamin D', 'Calcium', 'Vitamin B12', 'Contraceptive Pill', 'Painkiller']
@@ -88,7 +89,7 @@ export default function MedicationTracker({ userId, isHindi }) {
   const times = isHindi ? TIMES_HI : TIMES
 
   return (
-    <div className="space-y-4">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
 
       {/* Header Card */}
       <div className="bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl p-4 text-white">
@@ -101,21 +102,25 @@ export default function MedicationTracker({ userId, isHindi }) {
                 : `${takenCount}/${medications.length} taken today`}
             </p>
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setShowAdd(!showAdd)}
             className="bg-white/20 px-3 py-1.5 rounded-full text-xs hover:bg-white/30"
           >
             {showAdd ? '✕' : '+ Add'}
-          </button>
+          </motion.button>
         </div>
 
         {/* Progress */}
         {medications.length > 0 && (
           <div className="mt-3">
             <div className="w-full bg-white/20 rounded-full h-2">
-              <div
-                className="bg-white h-2 rounded-full transition-all"
-                style={{ width: `${(takenCount / medications.length) * 100}%` }}
+              <motion.div
+                className="bg-white h-2 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${(takenCount / medications.length) * 100}%` }}
+                transition={{ duration: 0.5 }}
               />
             </div>
           </div>
@@ -124,7 +129,7 @@ export default function MedicationTracker({ userId, isHindi }) {
 
       {/* Add Form */}
       {showAdd && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-violet-100">
+        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="bg-white rounded-2xl p-4 shadow-sm border border-violet-100">
           <h4 className="font-medium text-gray-700 mb-3">
             {isHindi ? 'नई दवाई जोड़ें' : 'Add New Medication'}
           </h4>
@@ -135,8 +140,10 @@ export default function MedicationTracker({ userId, isHindi }) {
           </p>
           <div className="flex flex-wrap gap-2 mb-3">
             {commonMeds.map(med => (
-              <button
+              <motion.button
                 key={med}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setNewMed({ ...newMed, name: med })}
                 className={`text-xs px-3 py-1.5 rounded-full transition-all ${
                   newMed.name === med
@@ -145,7 +152,7 @@ export default function MedicationTracker({ userId, isHindi }) {
                 }`}
               >
                 {med}
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -180,8 +187,10 @@ export default function MedicationTracker({ userId, isHindi }) {
               </label>
               <div className="flex gap-2 mt-1 flex-wrap">
                 {times.map((time, i) => (
-                  <button
+                  <motion.button
                     key={time}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setNewMed({ ...newMed, time_of_day: TIMES[i] })}
                     className={`text-xs px-3 py-1.5 rounded-full transition-all ${
                       newMed.time_of_day === TIMES[i]
@@ -190,20 +199,22 @@ export default function MedicationTracker({ userId, isHindi }) {
                     }`}
                   >
                     {time}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleAddMed}
             disabled={loading || !newMed.name.trim()}
             className="w-full mt-4 py-3 bg-violet-500 text-white rounded-xl text-sm font-medium disabled:opacity-50"
           >
             {loading ? '...' : (isHindi ? 'जोड़ें' : 'Add Medication')}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
 
       {/* Today's Medications */}
@@ -228,7 +239,8 @@ export default function MedicationTracker({ userId, isHindi }) {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => toggleTaken(med)}
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                       isTaken(med.id)
@@ -237,7 +249,7 @@ export default function MedicationTracker({ userId, isHindi }) {
                     }`}
                   >
                     {isTaken(med.id) && '✓'}
-                  </button>
+                  </motion.button>
                   <div>
                     <p className={`text-sm font-medium ${isTaken(med.id) ? 'text-emerald-600 line-through' : 'text-gray-700'}`}>
                       {med.name}
@@ -249,17 +261,19 @@ export default function MedicationTracker({ userId, isHindi }) {
                     </p>
                   </div>
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => deleteMed(med.id)}
                   className="text-gray-300 hover:text-rose-400 text-xs"
                 >
                   ✕
-                </button>
+                </motion.button>
               </div>
             ))}
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

@@ -2,21 +2,25 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { motion } from 'framer-motion';
+import { FileText, Download, Calendar, Loader2 } from 'lucide-react';
 
 export default function DoctorReport({ userId, t }) {
-  const [startDate, setStartDate] = useState(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
   const generateReport = async () => {
     setLoading(true);
     try {
+      // Fetch profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('name, age, avg_cycle_length, period_duration')
         .eq('id', userId)
         .single();
 
+      // Fetch period logs
       const { data: periodLogs } = await supabase
         .from('period_logs')
         .select('*')
@@ -25,6 +29,7 @@ export default function DoctorReport({ userId, t }) {
         .lte('date', endDate)
         .order('date', { ascending: true });
 
+      // Fetch symptom logs
       const { data: symptomLogs } = await supabase
         .from('symptom_logs')
         .select('*')
@@ -32,6 +37,7 @@ export default function DoctorReport({ userId, t }) {
         .gte('date', startDate)
         .lte('date', endDate);
 
+      // Fetch mood journal
       const { data: moodEntries } = await supabase
         .from('mood_journal')
         .select('*')
@@ -48,7 +54,7 @@ export default function DoctorReport({ userId, t }) {
         .map(([k, v]) => `${k}: ${v}`)
         .join(', ') || 'None reported';
 
-      // Build a nicer HTML
+      // Build professional HTML
       const reportHTML = `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #333; max-width: 700px;">
           <!-- Header -->
@@ -153,7 +159,7 @@ export default function DoctorReport({ userId, t }) {
 
       pdf.save(`Ritva_Report_${startDate}_to_${endDate}.pdf`);
 
-      // Save metadata
+      // Save metadata to DB
       await supabase.from('doctor_reports').insert({
         user_id: userId,
         report_url: 'local',
@@ -172,20 +178,56 @@ export default function DoctorReport({ userId, t }) {
 
   return (
     <div className="px-4">
-      <h2 className="text-2xl font-bold text-rose-500 mb-4">📋 {t.doctorReport || 'Doctor Report'}</h2>
-      <div className="bg-white p-4 rounded-xl shadow space-y-4">
+      <motion.h2
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-2xl font-bold text-rose-500 mb-4 flex items-center gap-2"
+      >
+        <FileText size={28} /> {t.doctorReport || 'Doctor Report'}
+      </motion.h2>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white p-4 rounded-xl shadow-md space-y-4"
+      >
         <div>
-          <label className="block text-sm font-medium mb-1">Start Date</label>
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full border border-rose-200 rounded-lg p-2" />
+          <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Calendar size={16} /> Start Date</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-full border border-rose-200 rounded-lg p-2"
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">End Date</label>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full border border-rose-200 rounded-lg p-2" />
+          <label className="block text-sm font-medium mb-1 flex items-center gap-1"><Calendar size={16} /> End Date</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-full border border-rose-200 rounded-lg p-2"
+          />
         </div>
-        <button onClick={generateReport} disabled={loading} className="w-full bg-rose-500 text-white py-3 rounded-lg font-semibold hover:bg-rose-600 transition">
-          {loading ? 'Generating...' : 'Download PDF Report'}
-        </button>
-      </div>
+
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={generateReport}
+          disabled={loading}
+          className="w-full bg-rose-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-70"
+        >
+          {loading ? (
+            <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+              <Loader2 size={20} />
+            </motion.span>
+          ) : (
+            <Download size={20} />
+          )}
+          {loading ? 'Generating Report...' : 'Download PDF Report'}
+        </motion.button>
+      </motion.div>
     </div>
   );
 }

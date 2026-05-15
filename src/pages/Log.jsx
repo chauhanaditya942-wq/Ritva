@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import SymptomTips from '../components/Symptoms/SymptomTips'
 import CustomSymptoms from '../components/Symptoms/CustomSymptoms'
@@ -67,11 +68,16 @@ export default function Log({ userId, t }) {
     }
   }
 
+  // Animation variants
+  const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } }
+  const staggerContainer = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } }
+  const childItem = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }
+
   return (
     <div className="max-w-md mx-auto space-y-4">
 
       {/* Date */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} whileHover={{ scale: 1.01 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <label className="text-xs text-gray-500 font-medium">{t.date}</label>
         <input
           type="date"
@@ -79,48 +85,53 @@ export default function Log({ userId, t }) {
           onChange={e => setDate(e.target.value)}
           className="w-full mt-1 px-4 py-2 rounded-xl border border-rose-100 focus:outline-none focus:border-rose-400 text-sm"
         />
-      </div>
+      </motion.div>
 
       {/* Mood */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.05 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-3">{t.howFeeling}</h3>
-        <div className="grid grid-cols-4 gap-2">
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="grid grid-cols-4 gap-2">
           {moods.map(mood => (
-            <button
+            <motion.button
               key={mood}
+              variants={childItem}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => setSelectedMood(mood)}
               className={`py-2 px-1 rounded-xl text-xs text-center transition-all ${
                 selectedMood === mood ? 'bg-rose-500 text-white shadow' : 'bg-rose-50 text-gray-600 hover:bg-rose-100'
               }`}
             >
               {mood}
-            </button>
+            </motion.button>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Flow Level */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-3">
           {isHindi ? 'प्रवाह स्तर 🩸' : 'Flow Level 🩸'}
         </h3>
         <div className="grid grid-cols-2 gap-2">
           {flowLevels.map(level => (
-            <button
+            <motion.button
               key={level}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setFlowLevel(level)}
               className={`py-2 px-3 rounded-xl text-xs text-center transition-all ${
                 flowLevel === level ? 'bg-rose-500 text-white shadow' : 'bg-rose-50 text-gray-600 hover:bg-rose-100'
               }`}
             >
               {level}
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Pain Level */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.15 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-1">
           {isHindi ? `दर्द स्तर 😣 : ${painLevel}/10` : `Pain Level 😣 : ${painLevel}/10`}
         </h3>
@@ -138,10 +149,10 @@ export default function Log({ userId, t }) {
         <div className="flex justify-between text-xs text-gray-300 mt-1">
           <span>0</span><span>5</span><span>10</span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Sleep */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.2 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-1">
           {isHindi ? `नींद 😴 : ${sleepHours} घंटे` : `Sleep 😴 : ${sleepHours} hours`}
         </h3>
@@ -157,86 +168,98 @@ export default function Log({ userId, t }) {
         <div className="flex justify-between text-xs text-gray-300 mt-1">
           <span>2h</span><span>7h</span><span>12h</span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Water Intake */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.25 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-3">
           {isHindi ? `पानी 💧 : ${waterIntake} गिलास` : `Water Intake 💧 : ${waterIntake} glasses`}
         </h3>
         <div className="flex items-center gap-4">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setWaterIntake(w => Math.max(0, w - 1))}
             className="w-10 h-10 rounded-full bg-rose-50 text-rose-500 text-xl font-bold hover:bg-rose-100"
-          >−</button>
+          >−</motion.button>
           <div className="flex-1 flex gap-1 flex-wrap justify-center">
             {Array.from({ length: 12 }, (_, i) => (
-              <div
+              <motion.div
                 key={i}
+                whileHover={{ scale: 1.3 }}
                 className={`w-5 h-5 rounded-full text-xs flex items-center justify-center ${
                   i < waterIntake ? 'bg-blue-400 text-white' : 'bg-gray-100'
                 }`}
               >
                 💧
-              </div>
+              </motion.div>
             ))}
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setWaterIntake(w => Math.min(12, w + 1))}
             className="w-10 h-10 rounded-full bg-rose-50 text-rose-500 text-xl font-bold hover:bg-rose-100"
-          >+</button>
+          >+</motion.button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Exercise */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.3 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-semibold text-gray-700">
             {isHindi ? 'व्यायाम 🏃' : 'Exercise 🏃'}
           </h3>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => { setExerciseDone(!exerciseDone); setExerciseType('') }}
             className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
               exerciseDone ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'
             }`}
           >
             {exerciseDone ? (isHindi ? 'हाँ ✓' : 'Yes ✓') : (isHindi ? 'नहीं' : 'No')}
-          </button>
+          </motion.button>
         </div>
         {exerciseDone && (
           <div className="flex flex-wrap gap-2">
             {exerciseTypes.map(type => (
-              <button
+              <motion.button
                 key={type}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setExerciseType(type)}
                 className={`py-1.5 px-3 rounded-full text-xs transition-all ${
                   exerciseType === type ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
                 }`}
               >
                 {type}
-              </button>
+              </motion.button>
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Symptoms */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.35 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-3">{t.symptoms}</h3>
-        <div className="flex flex-wrap gap-2">
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="flex flex-wrap gap-2">
           {symptoms.map(symptom => (
-            <button
+            <motion.button
               key={symptom}
+              variants={childItem}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => toggleSymptom(symptom)}
               className={`py-1.5 px-3 rounded-full text-xs transition-all ${
                 selectedSymptoms.includes(symptom) ? 'bg-rose-500 text-white' : 'bg-rose-50 text-gray-600 hover:bg-rose-100'
               }`}
             >
               {symptom}
-            </button>
+            </motion.button>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Custom Symptoms */}
       <CustomSymptoms
@@ -247,14 +270,16 @@ export default function Log({ userId, t }) {
 
       {/* Custom Symptoms Toggle */}
       {customSymptomsList.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
           <h3 className="font-semibold text-gray-700 mb-3">
             {isHindi ? '✨ मेरे लक्षण' : '✨ My Symptoms'}
           </h3>
           <div className="flex flex-wrap gap-2">
             {customSymptomsList.map(symptom => (
-              <button
+              <motion.button
                 key={symptom}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => toggleSymptom(symptom)}
                 className={`py-1.5 px-3 rounded-full text-xs transition-all ${
                   selectedSymptoms.includes(symptom)
@@ -263,17 +288,17 @@ export default function Log({ userId, t }) {
                 }`}
               >
                 {symptom}
-              </button>
+              </motion.button>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Symptom Tips */}
       <SymptomTips symptoms={selectedSymptoms} isHindi={isHindi} />
 
       {/* Notes */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
+      <motion.div {...fadeIn} transition={{ delay: 0.4 }} className="bg-white rounded-2xl p-4 shadow-sm border border-rose-50">
         <h3 className="font-semibold text-gray-700 mb-3">{t.notes}</h3>
         <textarea
           value={notes}
@@ -282,31 +307,39 @@ export default function Log({ userId, t }) {
           rows={3}
           className="w-full px-4 py-3 rounded-xl border border-rose-100 focus:outline-none focus:border-rose-400 text-sm resize-none"
         />
-      </div>
+      </motion.div>
 
       {success && (
-        <div className="bg-emerald-50 text-emerald-600 text-center py-2 rounded-xl text-sm">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-emerald-50 text-emerald-600 text-center py-2 rounded-xl text-sm">
           {t.savedSuccess}
-        </div>
+        </motion.div>
       )}
 
       {/* Save Button */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={handleSave}
         disabled={loading}
         className="w-full bg-rose-500 text-white py-3 rounded-2xl font-medium hover:bg-rose-600 transition-all disabled:opacity-50"
       >
         {loading ? '...' : t.saveLog}
-      </button>
+      </motion.button>
 
       {/* Mood Journal */}
-      <MoodJournal userId={userId} isHindi={isHindi} />
+      <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }}>
+        <MoodJournal userId={userId} isHindi={isHindi} />
+      </motion.div>
 
       {/* Medication Tracker */}
-      <MedicationTracker userId={userId} isHindi={isHindi} />
+      <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }}>
+        <MedicationTracker userId={userId} isHindi={isHindi} />
+      </motion.div>
 
       {/* Vaginal Health Tracker */}
-      <VaginalHealthTracker userId={userId} isHindi={isHindi} />
+      <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }}>
+        <VaginalHealthTracker userId={userId} isHindi={isHindi} />
+      </motion.div>
 
     </div>
   )

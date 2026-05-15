@@ -36,8 +36,8 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
   const saveTokenToSupabase = async (token) => {
     if (!userId || !token) return
     await supabase
-      .from('user_fcm_tokens')
-      .upsert({ user_id: userId, token, updated_at: new Date().toISOString() })
+  .from('user_fcm_tokens')
+  .upsert({ user_id: userId, token, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
   }
  
   const enableNotifications = async () => {

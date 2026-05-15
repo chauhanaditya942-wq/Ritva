@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 
 export default function ChatAssistant({ userId, periodLogs, recentSymptoms, isHindi }) {
   const [messages, setMessages] = useState([
@@ -37,6 +38,47 @@ export default function ChatAssistant({ userId, periodLogs, recentSymptoms, isHi
     return context
   }
 
+  // Smart Gemini call with cooldown & single retry on 429
+  const callGemini = async (promptText) => {
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    // Cooldown before first call
+    await delay(500);
+
+    for (let attempt = 0; attempt <= 1; attempt++) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }]
+            })
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          return text || null;
+        }
+
+        if (response.status === 429 && attempt === 0) {
+          // rate limited, wait 3 seconds then retry
+          await delay(3000);
+          continue;
+        }
+
+        // other error or second 429
+        return null;
+      } catch (err) {
+        return null;
+      }
+    }
+    return null;
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return
 
@@ -45,36 +87,25 @@ export default function ChatAssistant({ userId, periodLogs, recentSymptoms, isHi
     setInput('')
     setLoading(true)
 
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: `${buildContext()}\n\nUser question: ${input}` }]
-            }]
-          })
-        }
-      )
+    const prompt = `${buildContext()}\n\nUser question: ${input}`
+    const reply = await callGemini(prompt)
 
-      const data = await response.json()
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-      if (text) {
-        setMessages(prev => [...prev, { role: 'assistant', text }])
-      } else {
-        throw new Error('No response')
-      }
-    } catch (err) {
+    if (reply) {
+      setMessages(prev => [...prev, { role: 'assistant', text: reply }])
+    } else {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        text: isHindi ? 'माफ करें, कुछ गड़बड़ हुई। दोबारा कोशिश करें।' : 'Sorry, something went wrong. Please try again.'
+        text: isHindi
+          ? '⏳ AI अभी व्यस्त है, कृपया 1-2 मिनट बाद पुनः प्रयास करें।'
+          : '⏳ AI is busy right now. Please try again in 1-2 minutes.'
       }])
     }
-
     setLoading(false)
+  }
+
+  const messageVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
   }
 
   return (
@@ -88,13 +119,13 @@ export default function ChatAssistant({ userId, periodLogs, recentSymptoms, isHi
             {isHindi ? 'आपकी स्वास्थ्य सहायक' : 'Your health assistant'}
           </p>
         </div>
-        <div className="ml-auto w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="ml-auto w-2 h-2 bg-emerald-400 rounded-full" />
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <motion.div key={i} variants={messageVariants} initial="hidden" animate="visible" transition={{ delay: 0.05 * i }} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${
               msg.role === 'user'
                 ? 'bg-rose-500 text-white rounded-tr-sm'
@@ -102,15 +133,15 @@ export default function ChatAssistant({ userId, periodLogs, recentSymptoms, isHi
             }`}>
               {msg.text}
             </div>
-          </div>
+          </motion.div>
         ))}
         {loading && (
           <div className="flex justify-start">
             <div className="bg-rose-50 px-4 py-2.5 rounded-2xl rounded-tl-sm">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-rose-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-rose-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-rose-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-2 h-2 bg-rose-300 rounded-full" />
+                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-2 h-2 bg-rose-300 rounded-full" />
+                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-2 h-2 bg-rose-300 rounded-full" />
               </div>
             </div>
           </div>
@@ -128,13 +159,15 @@ export default function ChatAssistant({ userId, periodLogs, recentSymptoms, isHi
           'How to reduce cramps?',
           'When is my ovulation?'
         ]).map((q, i) => (
-          <button
+          <motion.button
             key={i}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setInput(q)}
             className="whitespace-nowrap text-xs bg-rose-50 text-rose-500 px-3 py-1.5 rounded-full hover:bg-rose-100 transition-all"
           >
             {q}
-          </button>
+          </motion.button>
         ))}
       </div>
 
@@ -148,13 +181,15 @@ export default function ChatAssistant({ userId, periodLogs, recentSymptoms, isHi
           placeholder={isHindi ? 'कुछ पूछें...' : 'Ask anything...'}
           className="flex-1 px-4 py-2 rounded-xl border border-rose-100 focus:outline-none focus:border-rose-400 text-sm"
         />
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
           onClick={sendMessage}
           disabled={loading || !input.trim()}
           className="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center hover:bg-rose-600 disabled:opacity-50 transition-all"
         >
           ➤
-        </button>
+        </motion.button>
       </div>
     </div>
   )

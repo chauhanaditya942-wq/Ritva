@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import PeriodCalendar from '../components/Calendar/PeriodCalendar'
 import { useCycle } from '../hooks/useCycle'
 import PhaseCard from '../components/Predictions/PhaseCard'
@@ -66,7 +67,13 @@ export default function Home({ userId, t }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="text-rose-400 text-4xl animate-pulse">🌸</div>
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="text-rose-400 text-4xl"
+        >
+          🌸
+        </motion.div>
       </div>
     )
   }
@@ -76,25 +83,56 @@ export default function Home({ userId, t }) {
 
       {/* ── In-App Notification Toast ── */}
       {inAppNotification && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm bg-white rounded-2xl shadow-lg border border-rose-100 p-4 flex items-start gap-3 animate-bounce">
+        <motion.div
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -50, opacity: 0 }}
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm bg-white rounded-2xl shadow-lg border border-rose-100 p-4 flex items-start gap-3"
+        >
           <span className="text-2xl">🌸</span>
           <div className="flex-1">
             <p className="font-semibold text-gray-800 text-sm">{inAppNotification.title}</p>
             <p className="text-xs text-gray-500 mt-0.5">{inAppNotification.body}</p>
           </div>
           <button onClick={dismissInAppNotification} className="text-gray-300 hover:text-gray-500 text-lg">✕</button>
-        </div>
+        </motion.div>
       )}
 
       {/* Welcome Card */}
-      <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-5 mb-4 text-white shadow-md">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ scale: 1.01 }}
+        className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-2xl p-5 mb-4 text-white shadow-md"
+      >
         <p className="text-rose-100 text-sm">{t.hello}</p>
+
+       {/* ── Decorative Illustration (CSS Art Flower) ── */}
+<div className="flex justify-center my-3">
+  <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center relative">
+    <span className="text-3xl">🌸</span>
+    <motion.span
+      animate={{ rotate: [0, 10, -10, 0] }}
+      transition={{ duration: 3, repeat: Infinity }}
+      className="absolute -top-1 -right-1 text-xl"
+    >
+      ✨
+    </motion.span>
+  </div>
+</div>
+
         {daysUntil !== null ? (
           <>
             <h2 className="text-xl font-bold mt-1">{t.nextPeriod}</h2>
             <div className="mt-3 bg-white/20 rounded-xl p-3">
               <p className="text-xs text-rose-100">{t.expectedIn}</p>
-              <p className="text-2xl font-bold">{daysUntil} {t.days}</p>
+              <motion.p
+                className="text-2xl font-bold"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {daysUntil} {t.days}
+              </motion.p>
               {nextPeriod && (
                 <p className="text-xs text-rose-100 mt-1">
                   {nextPeriod.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -108,11 +146,16 @@ export default function Home({ userId, t }) {
             <p className="text-rose-100 text-sm mt-2">{t.logFirstPeriod}</p>
           </>
         )}
-      </div>
+      </motion.div>
 
       {/* ── Notification Enable Banner ── */}
       {permissionStatus !== 'granted' && !notificationsEnabled && (
-        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-4 flex items-center gap-3">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-4 flex items-center gap-3"
+        >
           <span className="text-2xl">🔔</span>
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-700">
@@ -122,77 +165,104 @@ export default function Home({ userId, t }) {
               {isHindi ? 'Period, ovulation aur pad alerts paayein' : 'Get period, ovulation & pad alerts'}
             </p>
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleEnableNotifications}
             disabled={notifLoading}
             className="bg-rose-500 text-white text-xs px-3 py-2 rounded-xl font-medium disabled:opacity-50 whitespace-nowrap"
           >
             {notifLoading ? '...' : (isHindi ? 'Enable' : 'Enable')}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
 
       {/* Notifications enabled confirmation */}
       {notificationsEnabled && (
-        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 mb-4 flex items-center gap-2">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 mb-4 flex items-center gap-2"
+        >
           <span>✅</span>
           <p className="text-xs text-emerald-700 font-medium">
             {isHindi ? 'Reminders active hain 🌸' : 'Reminders are active 🌸'}
           </p>
-        </div>
+        </motion.div>
       )}
 
       {/* Notification denied message */}
       {permissionStatus === 'denied' && (
-        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-3 mb-4 flex items-center gap-2">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gray-50 border border-gray-100 rounded-2xl p-3 mb-4 flex items-center gap-2"
+        >
           <span>🔕</span>
           <p className="text-xs text-gray-500">
             {isHindi
               ? 'Notifications blocked hain — browser settings se enable karein'
               : 'Notifications blocked — enable from browser settings'}
           </p>
-        </div>
+        </motion.div>
       )}
 
       {/* Log Period Button */}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={() => setShowLogModal(true)}
         className="w-full bg-rose-500 text-white py-3 rounded-2xl font-medium mb-4 hover:bg-rose-600 transition-all shadow-sm"
       >
         {t.logPeriod}
-      </button>
+      </motion.button>
 
       {/* Calendar */}
-      <PeriodCalendar
-        periodDates={getPeriodDates()}
-        predictedDates={getPredictedDates()}
-        ovulationDate={getOvulationDate()}
-        fertileWindowDates={getFertileWindowDates()}
-        lutealDates={getLutealDates()}
-        isHindi={isHindi}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <PeriodCalendar
+          periodDates={getPeriodDates()}
+          predictedDates={getPredictedDates()}
+          ovulationDate={getOvulationDate()}
+          fertileWindowDates={getFertileWindowDates()}
+          lutealDates={getLutealDates()}
+          isHindi={isHindi}
+        />
+      </motion.div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-3 mt-4">
-        <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-rose-50">
-          <p className="text-2xl font-bold text-rose-500">{getAvgCycleLength()}</p>
-          <p className="text-xs text-gray-400 mt-1">{t.cycleLength}</p>
-        </div>
-        <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-rose-50">
-          <p className="text-2xl font-bold text-rose-500">{getAvgPeriodDuration()}</p>
-          <p className="text-xs text-gray-400 mt-1">{t.periodDays}</p>
-        </div>
-        <div className="bg-white rounded-xl p-3 text-center shadow-sm border border-rose-50">
-          <p className="text-2xl font-bold text-emerald-500">
-            {getOvulationDate() ? new Date(getOvulationDate() + 'T00:00:00').getDate() : '-'}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">{t.ovulationDay}</p>
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="grid grid-cols-3 gap-3 mt-4"
+      >
+        {[
+          { value: getAvgCycleLength(), label: t.cycleLength, color: 'text-rose-500' },
+          { value: getAvgPeriodDuration(), label: t.periodDays, color: 'text-rose-500' },
+          { value: getOvulationDate() ? new Date(getOvulationDate() + 'T00:00:00').getDate() : '-', label: t.ovulationDay, color: 'text-emerald-500' }
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            whileHover={{ scale: 1.05 }}
+            className="bg-white rounded-xl p-3 text-center shadow-sm border border-rose-50"
+          >
+            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
+          </motion.div>
+        ))}
+      </motion.div>
 
       {/* Ovulation Window Card */}
       {getOvulationDate() && (
-        <div className="bg-emerald-50 rounded-2xl p-4 mt-4 border border-emerald-100">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-emerald-50 rounded-2xl p-4 mt-4 border border-emerald-100"
+        >
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xl">🌿</span>
             <h3 className="font-semibold text-emerald-700">Ovulation & Fertile Window</h3>
@@ -230,16 +300,52 @@ export default function Home({ userId, t }) {
               🌿 Fertile window is 7 days — 5 days before ovulation to 1 day after
             </p>
           </div>
-        </div>
+        </motion.div>
       )}
 
+      {/* ── Daily Wellness Quote Card ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="mt-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-4 border border-purple-200 flex items-center gap-4"
+      >
+        {/* Leaf icon instead of emoji */}
+        <div className="w-14 h-14 rounded-full bg-white shadow-inner flex items-center justify-center text-3xl">
+  🧘‍♀️
+</div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-purple-800">Daily Wellness</p>
+          <p className="text-xs text-purple-600 mt-1">
+            "Your body is a garden – nurture it with rest, water, and self-love."
+          </p>
+        </div>
+      </motion.div>
+
       {/* Phase Card */}
-      <PhaseCard phase={phase} isHindi={isHindi} />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <PhaseCard phase={phase} isHindi={isHindi} />
+      </motion.div>
 
       {/* Log Modal */}
       {showLogModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
-          <div className="bg-white w-full max-w-md rounded-t-3xl p-6">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/40 flex items-end justify-center z-50"
+        >
+          <motion.div
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            exit={{ y: 100 }}
+            transition={{ type: 'spring', damping: 25 }}
+            className="bg-white w-full max-w-md rounded-t-3xl p-6"
+          >
             <h3 className="text-lg font-bold text-gray-700 mb-1">{t.logPeriodTitle}</h3>
             <p className="text-xs text-gray-400 mb-4">End date can be updated later when your period ends</p>
 
@@ -281,22 +387,26 @@ export default function Home({ userId, t }) {
             </div>
 
             <div className="flex gap-3">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowLogModal(false)}
                 className="flex-1 py-3 rounded-xl border border-rose-100 text-gray-400 text-sm"
               >
                 {t.cancel}
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleLogPeriod}
                 disabled={logLoading}
                 className="flex-1 py-3 rounded-xl bg-rose-500 text-white text-sm font-medium disabled:opacity-50"
               >
                 {logLoading ? '...' : t.save}
-              </button>
+              </motion.button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
     </div>
