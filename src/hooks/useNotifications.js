@@ -27,26 +27,24 @@ const daysUntil = (dateStr) => {
 }
  
 export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, getFertileWindowDates } = {}, isHindi = false) {
-  const [fcmToken, setFcmToken] = useState(null)
   const [permissionStatus, setPermissionStatus] = useState(Notification.permission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted')
   const [inAppNotification, setInAppNotification] = useState(null)
  
- const enableNotifications = async () => {
-  try {
-    const { default: OneSignal } = await import('react-onesignal')
-    await OneSignal.Notifications.requestPermission()
-    setPermissionStatus('granted')
-    setNotificationsEnabled(true)
-    return true
-  } catch (err) {
-    console.error('Notification error:', err)
-    setPermissionStatus('denied')
-    return false
+  const enableNotifications = async () => {
+    try {
+      const { default: OneSignal } = await import('react-onesignal')
+      await OneSignal.Notifications.requestPermission()
+      setPermissionStatus('granted')
+      setNotificationsEnabled(true)
+      return true
+    } catch (err) {
+      console.error('Notification error:', err)
+      setPermissionStatus('denied')
+      return false
+    }
   }
-}
  
-  // Aaj ka symptom log fetch karo
   const fetchTodayLog = async () => {
     if (!userId) return null
     const today = toDateStr(new Date())
@@ -73,7 +71,6 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
     const nextPeriodStr = toDateStr(nextPeriod)
     const daysToPeriod = daysUntil(nextPeriodStr)
  
-    // ── Period reminders ───────────────────────────────────
     if (daysToPeriod === 2) {
       showLocalNotification(
         isHindi ? '🌸 Period आने वाला है!' : '🌸 Period is coming!',
@@ -101,7 +98,6 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
       )
     }
  
-    // ── Ovulation reminders ────────────────────────────────
     if (ovulationDateStr) {
       const daysToOvulation = daysUntil(ovulationDateStr)
  
@@ -124,7 +120,6 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
       }
     }
  
-    // ── Fertile window reminder ────────────────────────────
     if (fertileWindowDates.length > 0) {
       const firstFertileDay = fertileWindowDates[0]
       const daysToFertile = daysUntil(firstFertileDay)
@@ -148,7 +143,6 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
       }
     }
  
-    // ── Sleep reminder — raat 10 baje ─────────────────────
     if (hour >= 22 && hour < 23) {
       const todayLog = await fetchTodayLog()
       if (!todayLog || todayLog.sleep_hours < 7) {
@@ -161,7 +155,6 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
       }
     }
  
-    // ── Water reminder — din mein 3 baar ──────────────────
     if (hour === 9 || hour === 14 || hour === 18) {
       const todayLog = await fetchTodayLog()
       const currentWater = todayLog?.water_intake || 0
@@ -175,7 +168,6 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
       }
     }
  
-    // ── Daily log reminder — shaam 8 baje ─────────────────
     if (hour >= 20 && hour < 21) {
       showLocalNotification(
         isHindi ? '📝 आज का log करो!' : '📝 Log your day!',
@@ -198,7 +190,6 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
   }, [notificationsEnabled, permissionStatus, getNextPeriodDate, isHindi])
  
   return {
-    fcmToken,
     permissionStatus,
     notificationsEnabled,
     inAppNotification,
