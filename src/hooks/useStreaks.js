@@ -21,18 +21,21 @@ export function useStreaks(userId) {
 
   const fetchStreaks = async () => {
     if (!userId) return;
-    // Get streak data
-    const { data } = await supabase
-  .from('user_streaks')
-  .select('*')
-  .eq('user_id', userId)
-  .maybeSingle()
-    // Get earned badges
+
+    // ✅ Bug 1 fixed: data → streakRow
+    const { data: streakRow } = await supabase
+      .from('user_streaks')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
     const { data: badges } = await supabase
       .from('user_badges')
       .select('badge_id')
       .eq('user_id', userId);
+
     const earned = (badges || []).map(b => b.badge_id);
+
     setStreakData({
       currentStreak: streakRow?.current_streak || 0,
       longestStreak: streakRow?.longest_streak || 0,
@@ -46,7 +49,6 @@ export function useStreaks(userId) {
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-    // Check if user logged anything today (from multiple tables)
     const [symptomLog, waterLog] = await Promise.all([
       supabase.from('symptom_logs').select('id').eq('user_id', userId).eq('date', today).maybeSingle(),
       supabase.from('water_logs').select('id').eq('user_id', userId).eq('date', today).maybeSingle(),
@@ -54,12 +56,12 @@ export function useStreaks(userId) {
 
     const loggedToday = !!(symptomLog.data || waterLog.data);
 
-    // Get current streak
+    // ✅ Bug 2 fixed: .single() → .maybeSingle()
     const { data: streakRow } = await supabase
       .from('user_streaks')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     let currentStreak = streakRow?.current_streak || 0;
     let longestStreak = streakRow?.longest_streak || 0;
@@ -67,48 +69,46 @@ export function useStreaks(userId) {
 
     if (loggedToday) {
       if (lastLogDate === yesterday || lastLogDate === today) {
-        // continue streak (or same day)
         if (lastLogDate !== today) {
           currentStreak += 1;
         }
       } else {
-        // break in streak, start new
         currentStreak = 1;
       }
       lastLogDate = today;
       if (currentStreak > longestStreak) longestStreak = currentStreak;
 
-      // Upsert streak
-     await supabase
-  .from('user_streaks')
-  .upsert({
-    user_id: userId,
-    current_streak: currentStreak,
-    longest_streak: longestStreak,
-    last_log_date: lastLogDate,
-    updated_at: new Date(),
-  }, { onConflict: 'user_id' });
+      await supabase
+        .from('user_streaks')
+        .upsert({
+          user_id: userId,
+          current_streak: currentStreak,
+          longest_streak: longestStreak,
+          last_log_date: lastLogDate,
+          updated_at: new Date(),
+        }, { onConflict: 'user_id' });
 
-      // Check for new badges
       const newBadges = BADGES.filter(b => currentStreak >= b.streak && !streakRow?.earned_badges?.includes(b.id));
       if (newBadges.length > 0) {
-        // Insert new badges
         const inserts = newBadges.map(b => ({
           user_id: userId,
           badge_id: b.id,
         }));
         await supabase.from('user_badges').upsert(inserts, { onConflict: 'user_id,badge_id' });
-        // Return newly earned badges for celebration
         return { updated: true, newBadges };
       }
     } else {
-      // No log today, if last log was yesterday or before, streak might still be alive? Actually we break if no log today.
-      // Reset streak if last_log_date < yesterday
       if (lastLogDate && lastLogDate < yesterday) {
         currentStreak = 0;
         await supabase
           .from('user_streaks')
-          .upsert({ user_id: userId, current_streak: 0, longest_streak: longestStreak, last_log_date: null, updated_at: new Date() }, { onConflict: 'user_id' });
+          .upsert({
+            user_id: userId,
+            current_streak: 0,
+            longest_streak: longestStreak,
+            last_log_date: null,
+            updated_at: new Date()
+          }, { onConflict: 'user_id' });
       }
       return { updated: false };
     }
