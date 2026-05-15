@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
- 
+
 const showLocalNotification = (title, body) => {
   if (Notification.permission === 'granted') {
     new Notification(title, {
@@ -11,40 +11,40 @@ const showLocalNotification = (title, body) => {
     })
   }
 }
- 
+
 const toDateStr = (date) => {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
 }
- 
+
 const daysUntil = (dateStr) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const target = new Date(dateStr + 'T00:00:00')
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24))
 }
- 
+
 export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, getFertileWindowDates } = {}, isHindi = false) {
   const [permissionStatus, setPermissionStatus] = useState(Notification.permission)
   const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted')
   const [inAppNotification, setInAppNotification] = useState(null)
- 
+
   const enableNotifications = async () => {
     try {
-      const { default: OneSignal } = await import('react-onesignal')
-      await OneSignal.Notifications.requestPermission()
-      setPermissionStatus('granted')
-      setNotificationsEnabled(true)
-      return true
+      const permission = await Notification.requestPermission()
+      setPermissionStatus(permission)
+      setNotificationsEnabled(permission === 'granted')
+      return permission === 'granted'
     } catch (err) {
       console.error('Notification error:', err)
       setPermissionStatus('denied')
       return false
     }
   }
- 
+
+  // ✅ Fix: .maybeSingle() instead of .single()
   const fetchTodayLog = async () => {
     if (!userId) return null
     const today = toDateStr(new Date())
@@ -53,24 +53,24 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
       .select('sleep_hours, water_intake')
       .eq('user_id', userId)
       .eq('date', today)
-      .single()
+      .maybeSingle()
     return data
   }
- 
+
   const checkAndSendReminders = async () => {
     if (!getNextPeriodDate || !getOvulationDate || !getFertileWindowDates) return
- 
+
     const nextPeriod = getNextPeriodDate()
     const ovulationDateStr = getOvulationDate()
     const fertileWindowDates = getFertileWindowDates()
     const today = toDateStr(new Date())
     const hour = new Date().getHours()
- 
+
     if (!nextPeriod) return
- 
+
     const nextPeriodStr = toDateStr(nextPeriod)
     const daysToPeriod = daysUntil(nextPeriodStr)
- 
+
     if (daysToPeriod === 2) {
       showLocalNotification(
         isHindi ? '🌸 Period आने वाला है!' : '🌸 Period is coming!',
@@ -79,7 +79,7 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
           : 'Period may start in 2 days. Keep pads or tampons ready 🩸'
       )
     }
- 
+
     if (daysToPeriod === 1) {
       showLocalNotification(
         isHindi ? '🩸 कल period आ सकता है!' : '🩸 Period expected tomorrow!',
@@ -88,7 +88,7 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
           : 'Make sure to keep pads or tampons handy. Stay prepared 💪'
       )
     }
- 
+
     if (daysToPeriod === 0) {
       showLocalNotification(
         isHindi ? '🌸 आज period expected है' : '🌸 Period expected today',
@@ -97,10 +97,10 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
           : 'Stay hydrated, rest and take care of yourself 💗'
       )
     }
- 
+
     if (ovulationDateStr) {
       const daysToOvulation = daysUntil(ovulationDateStr)
- 
+
       if (daysToOvulation === 1) {
         showLocalNotification(
           isHindi ? '🥚 कल Ovulation है!' : '🥚 Ovulation tomorrow!',
@@ -109,7 +109,7 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
             : 'Tomorrow is your most fertile day. Track basal body temperature 🌡️'
         )
       }
- 
+
       if (daysToOvulation === 0) {
         showLocalNotification(
           isHindi ? '🥚 आज Ovulation Day है!' : '🥚 Today is Ovulation Day!',
@@ -119,11 +119,11 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
         )
       }
     }
- 
+
     if (fertileWindowDates.length > 0) {
       const firstFertileDay = fertileWindowDates[0]
       const daysToFertile = daysUntil(firstFertileDay)
- 
+
       if (daysToFertile === 1) {
         showLocalNotification(
           isHindi ? '🌿 कल Fertile Window शुरू!' : '🌿 Fertile Window starts tomorrow!',
@@ -132,7 +132,7 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
             : 'Your fertile window starts tomorrow — elevated fertility for 7 days'
         )
       }
- 
+
       if (fertileWindowDates.includes(today)) {
         showLocalNotification(
           isHindi ? '🌿 आप Fertile Window में हैं' : '🌿 You are in your Fertile Window',
@@ -142,10 +142,10 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
         )
       }
     }
- 
+
     if (hour >= 22 && hour < 23) {
       const todayLog = await fetchTodayLog()
-      if (!todayLog || todayLog.sleep_hours < 7) {
+      if (!todayLog || (todayLog.sleep_hours || 0) < 7) {
         showLocalNotification(
           isHindi ? '😴 सोने का समय हो गया!' : '😴 Time to sleep!',
           isHindi
@@ -154,7 +154,7 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
         )
       }
     }
- 
+
     if (hour === 9 || hour === 14 || hour === 18) {
       const todayLog = await fetchTodayLog()
       const currentWater = todayLog?.water_intake || 0
@@ -167,7 +167,7 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
         )
       }
     }
- 
+
     if (hour >= 20 && hour < 21) {
       showLocalNotification(
         isHindi ? '📝 आज का log करो!' : '📝 Log your day!',
@@ -177,18 +177,19 @@ export function useNotifications(userId, { getNextPeriodDate, getOvulationDate, 
       )
     }
   }
- 
+
   useEffect(() => {
     if (permissionStatus !== 'granted' || !notificationsEnabled) return
     checkAndSendReminders()
   }, [notificationsEnabled, permissionStatus])
- 
+
+  // ✅ Fix: 30 min interval instead of 1 hour
   useEffect(() => {
     if (permissionStatus !== 'granted' || !notificationsEnabled) return
-    const interval = setInterval(checkAndSendReminders, 60 * 60 * 1000)
+    const interval = setInterval(checkAndSendReminders, 30 * 60 * 1000)
     return () => clearInterval(interval)
   }, [notificationsEnabled, permissionStatus, getNextPeriodDate, isHindi])
- 
+
   return {
     permissionStatus,
     notificationsEnabled,
