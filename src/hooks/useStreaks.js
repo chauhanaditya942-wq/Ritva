@@ -79,15 +79,15 @@ export function useStreaks(userId) {
       if (currentStreak > longestStreak) longestStreak = currentStreak;
 
       // Upsert streak
-      await supabase
-        .from('user_streaks')
-        .upsert({
-          user_id: userId,
-          current_streak: currentStreak,
-          longest_streak: longestStreak,
-          last_log_date: lastLogDate,
-          updated_at: new Date(),
-        });
+     await supabase
+  .from('user_streaks')
+  .upsert({
+    user_id: userId,
+    current_streak: currentStreak,
+    longest_streak: longestStreak,
+    last_log_date: lastLogDate,
+    updated_at: new Date(),
+  }, { onConflict: 'user_id' });
 
       // Check for new badges
       const newBadges = BADGES.filter(b => currentStreak >= b.streak && !streakRow?.earned_badges?.includes(b.id));
@@ -108,11 +108,10 @@ export function useStreaks(userId) {
         currentStreak = 0;
         await supabase
           .from('user_streaks')
-          .upsert({ user_id: userId, current_streak: 0, longest_streak: longestStreak, last_log_date: null, updated_at: new Date() });
+          .upsert({ user_id: userId, current_streak: 0, longest_streak: longestStreak, last_log_date: null, updated_at: new Date() }, { onConflict: 'user_id' });
       }
+      return { updated: false };
     }
-
-    return { updated: false };
   };
 
   useEffect(() => {
